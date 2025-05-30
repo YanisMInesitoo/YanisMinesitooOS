@@ -1,0 +1,14 @@
+# Instrucciones para fondo de pantalla PNG en tu OS
+
+1. Descarga stb_image.h desde https://github.com/nothings/stb/blob/master/stb_image.h y colócalo en tu proyecto.
+2. Crea tu imagen PNG personalizada (por ejemplo, fondo.png).
+3. Convierte la imagen a un array de bytes en C:
+   - Si tienes MSYS2: abre la terminal y ejecuta:
+     xxd -i fondo.png > imagen_png.h
+   - Si tienes WSL: wsl xxd -i fondo.png > imagen_png.h
+4. Copia imagen_png.h a tu proyecto.
+5. Asegúrate de que kernel.c incluya png_wallpaper.h y que png_wallpaper.h incluya imagen_png.h.
+6. Compila tu sistema operativo con make.
+7. Al arrancar, tu OS mostrará el PNG como fondo de pantalla.
+
+¡Listo! Así puedes tener tu propio fondo gráfico en tu sistema operativo.

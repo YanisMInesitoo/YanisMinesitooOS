@@ -1,0 +1,26 @@
+#!/bin/sh
+clear
+echo "\n\n¡Bienvenido a YanisMinesitoo OS!\n\n"
+echo "Utilidades disponibles:"
+echo "1. Shell (sh)"
+echo "2. Editor (nano)"
+echo "3. Descargas (wget, curl)"
+echo "4. Compresión (tar, gzip)"
+echo "5. Gestor de paquetes (.deb) (dpkg)"
+echo "6. Ver procesos (ps)"
+echo "7. Ver archivos (ls, cat)"
+echo "8. Salir"
+echo "\nEscribe el comando que quieras usar o presiona Enter para shell:"
+read cmd
+case "$cmd" in
+  nano) nano ;;
+  wget) wget ;;
+  curl) curl ;;
+  tar) tar ;;
+  gzip) gzip ;;
+  dpkg) dpkg ;;
+  ps) ps ;;
+  ls) ls ;;
+  cat) cat ;;
+  *) /bin/sh ;;
+esac
