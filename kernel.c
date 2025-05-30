@@ -14,6 +14,16 @@ int file_count = 0;
 char pkg_names[PKG_MAX][PKG_NAME];
 int pkg_count = 0;
 
+// Definiciones para soporte de rutas según versión (normal o portable)
+#ifndef SYS_BASE
+#define SYS_BASE "/" // Por defecto, versión normal
+#endif
+#define SYS_BOOT  SYS_BASE "boot/"
+#define SYS_HOME  SYS_BASE "home/"
+#define SYS_OPT   SYS_BASE "opt/"
+#define SYS_APPS  SYS_BASE "apps/"
+#define SYS_DEV   SYS_BASE "dev/"
+
 void print(const char *str) {
     while (*str) {
         vidptr[cur++] = *str++;
@@ -294,6 +304,26 @@ void shell() {
             print("\nEres root (usuario único)");
         } else if (!strcmp(cmd, "time")) {
             print("\nFunción de reloj no implementada (kernel básico)");
+        } else if (!strncmp(cmd, "instalar ", 9)) {
+            const char *file = cmd + 9;
+            int len = strlen(file);
+            if (len > 4 && !strcmp(file + len - 4, ".exe")) {
+                print("\n[Windows] Instalador .exe detectado. Ejecutando (simulado)...\n");
+                print("(No se puede ejecutar código Windows real, solo simulación de instalación)\n");
+            } else if (len > 4 && !strcmp(file + len - 4, ".msi")) {
+                print("\n[Windows] Instalador .msi detectado. Ejecutando (simulado)...\n");
+                print("(No se puede ejecutar código MSI real, solo simulación de instalación)\n");
+            } else if (len > 4 && !strcmp(file + len - 4, ".dll")) {
+                print("\n[Windows] Librería .dll detectada. (No se puede cargar, solo simulado)\n");
+            } else if (len > 4 && !strcmp(file + len - 4, ".deb")) {
+                print("\n[Linux] Instalador .deb detectado. Usando dpkg si está disponible...\n");
+                print("dpkg -i "); print(file); print("\n(Simulado, solo disponible si dpkg está en el sistema)\n");
+            } else if (len > 4 && !strcmp(file + len - 4, ".rpm")) {
+                print("\n[Linux] Instalador .rpm detectado. Ejecutando (simulado)...\n");
+                print("(No se puede instalar RPM real, solo simulación de instalación)\n");
+            } else {
+                print("\nTipo de instalador no reconocido o no soportado.\n");
+            }
         } else {
             print("\nComando no reconocido.");
         }
@@ -305,7 +335,7 @@ void shell() {
 #define LOGIN_PASS "1234"
 
 void draw_login_screen(const char *user_input, const char *pass_input, int focus, int error) {
-    draw_png_wallpaper(); // Fondo de pantalla
+    draw_login_wallpaper(); // Fondo de pantalla personalizado para login
     // Dibuja cajas de input y botón
     // Caja usuario
     for (int y = 60; y < 80; y++)
@@ -320,12 +350,11 @@ void draw_login_screen(const char *user_input, const char *pass_input, int focus
         for (int x = 120; x < 200; x++)
             putpixel(x, y, focus == 2 ? 10 : 7); // Verde si enfocado, gris claro si no
     // Texto
-    // (Solo modo texto, simplificado)
-    cur = 0; // Reset cursor texto
+    cur = 0;
     print("\n\n        Nombre de usuario:");
-    cur = 160; // Ajusta para que el texto salga debajo de la caja
+    cur = 160;
     print(user_input);
-    cur = 160 + 80; // Ajusta para la segunda caja
+    cur = 160 + 80;
     print("\n        Contraseña:");
     cur = 160 + 160;
     for (int i = 0; pass_input[i]; i++) print("*");

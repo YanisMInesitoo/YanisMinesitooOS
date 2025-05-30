@@ -8,6 +8,7 @@
 // Ejemplo de cómo usar stb_image para decodificar un PNG embebido
 // (debes convertir tu imagen.png a un array de bytes con xxd -i imagen.png > imagen_png.h)
 #include "imagen_png.h"
+#include "imagen_png_inicio.h"
 
 void draw_png_wallpaper() {
     int w, h, comp;
@@ -23,6 +24,25 @@ void draw_png_wallpaper() {
             unsigned char g = pixels[idx+1];
             unsigned char b = pixels[idx+2];
             // Convertir RGB a un color VGA aproximado (usa solo 6 bits)
+            unsigned char color = ((r >> 6) << 4) | ((g >> 6) << 2) | (b >> 6);
+            putpixel(x0 + x, y0 + y, color);
+        }
+    }
+    stbi_image_free(pixels);
+}
+
+void draw_login_wallpaper() {
+    int w, h, comp;
+    unsigned char *pixels = stbi_load_from_memory(Nombre_de_usuario_png, sizeof(Nombre_de_usuario_png), &w, &h, &comp, 3);
+    if (!pixels) return;
+    int x0 = (320 - w) / 2;
+    int y0 = (200 - h) / 2;
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            int idx = (y * w + x) * 3;
+            unsigned char r = pixels[idx];
+            unsigned char g = pixels[idx+1];
+            unsigned char b = pixels[idx+2];
             unsigned char color = ((r >> 6) << 4) | ((g >> 6) << 2) | (b >> 6);
             putpixel(x0 + x, y0 + y, color);
         }
