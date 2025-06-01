@@ -223,13 +223,21 @@ void shell() {
             if (folder_count < MAX_ENTRIES) {
                 int i = 0;
                 const char *name = cmd + 6;
-                while (name[i] && i < NAME_LEN-1) {
-                    folders[folder_count][i] = name[i];
-                    i++;
-                }
+                // Prefijar ruta base para carpetas
+                char fullpath[NAME_LEN + 32];
+                int j = 0;
+                const char *base = SYS_HOME; // Carpeta base por defecto
+                while (base[j] && j < 31) { fullpath[j] = base[j]; j++; }
+                int k = 0;
+                while (name[k] && j < NAME_LEN + 31 - 1) { fullpath[j++] = name[k++]; }
+                fullpath[j] = 0;
+                // Guardar la ruta completa en folders
+                for (i = 0; i < NAME_LEN-1 && fullpath[i]; i++)
+                    folders[folder_count][i] = fullpath[i];
                 folders[folder_count][i] = 0;
                 folder_count++;
-                print("\nCarpeta creada.");
+                print("\nCarpeta creada en: ");
+                print(fullpath);
             } else {
                 print("\nNo se pueden crear más carpetas.");
             }
@@ -237,24 +245,32 @@ void shell() {
             if (file_count < MAX_ENTRIES) {
                 int i = 0;
                 const char *name = cmd + 7;
-                while (name[i] && i < NAME_LEN-1) {
-                    files[file_count][i] = name[i];
-                    i++;
-                }
+                // Prefijar ruta base para archivos
+                char fullpath[NAME_LEN + 32];
+                int j = 0;
+                const char *base = SYS_HOME; // Carpeta base por defecto
+                while (base[j] && j < 31) { fullpath[j] = base[j]; j++; }
+                int k = 0;
+                while (name[k] && j < NAME_LEN + 31 - 1) { fullpath[j++] = name[k++]; }
+                fullpath[j] = 0;
+                // Guardar la ruta completa en files
+                for (i = 0; i < NAME_LEN-1 && fullpath[i]; i++)
+                    files[file_count][i] = fullpath[i];
                 files[file_count][i] = 0;
                 file_count++;
-                print("\nArchivo creado.");
+                print("\nArchivo creado en: ");
+                print(fullpath);
             } else {
                 print("\nNo se pueden crear más archivos.");
             }
         } else if (!strcmp(cmd, "ls")) {
-            print("\nCarpetas:\n");
+            print("\nCarpetas en "); print(SYS_HOME); print(":\n");
             for (int i = 0; i < folder_count; i++) {
                 print("  ");
                 print(folders[i]);
                 print("\n");
             }
-            print("Archivos:\n");
+            print("Archivos en "); print(SYS_HOME); print(":\n");
             for (int i = 0; i < file_count; i++) {
                 print("  ");
                 print(files[i]);
@@ -324,6 +340,47 @@ void shell() {
             } else {
                 print("\nTipo de instalador no reconocido o no soportado.\n");
             }
+        } else if (!strncmp(cmd, "wget ", 5)) {
+            print("\nEjecutando wget...\n");
+            system(cmd); // Solo funcionará si el OS es Linux+initramfs y wget está presente
+        } else if (!strncmp(cmd, "curl ", 5)) {
+            print("\nEjecutando curl...\n");
+            system(cmd); // Solo funcionará si el OS es Linux+initramfs y curl está presente
+        } else if (!strncmp(cmd, "ping ", 5)) {
+            print("\nEjecutando ping...\n");
+            system(cmd); // Solo funcionará si el OS es Linux+initramfs y ping está presente (busybox)
+        } else if (!strncmp(cmd, "wifi ", 5)) {
+            // wifi <ssid> <password>
+            char ssid[64] = "";
+            char pass[64] = "";
+            int i = 0, j = 0;
+            const char *args = cmd + 5;
+            // Extraer SSID
+            while (args[i] && args[i] != ' ' && i < 63) { ssid[i] = args[i]; i++; }
+            ssid[i] = 0;
+            if (args[i] == ' ') i++;
+            // Extraer password
+            while (args[i] && j < 63) { pass[j++] = args[i++]; }
+            pass[j] = 0;
+            if (!ssid[0] || !pass[0]) {
+                print("\nUso: wifi <ssid> <password>");
+            } else {
+                print("\nConectando a WiFi: "); print(ssid); print(" ...\n");
+                // Generar comando para conectar (requiere wpa_supplicant y dhclient o udhcpc)
+                print("Ejecutando: wpa_passphrase \""); print(ssid); print("\" \""); print(pass); print("\" > /tmp/wpa.conf\n");
+                print("wpa_supplicant -B -i wlan0 -c /tmp/wpa.conf\n");
+                print("dhclient wlan0\n");
+                print("(Asegúrate de tener wpa_supplicant, dhclient y permisos root)\n");
+                // En un OS real, aquí se llamaría a system() con los comandos anteriores
+            }
+        } else if (!strcmp(cmd, "wifi-ui")) {
+            wifi_app();
+        } else if (!strcmp(cmd, "imgviewer")) {
+            imgviewer_main();
+        } else if (!strcmp(cmd, "notepad")) {
+            notepad_main();
+        } else if (!strcmp(cmd, "sysviewer")) {
+            sysviewer_main("/");
         } else {
             print("\nComando no reconocido.");
         }
@@ -428,6 +485,84 @@ void draw_wallpaper() {
     }
     for (int y = 80; y < 120; y++) {
         putpixel(110, y, 12); putpixel(209, y, 12);
+    }
+}
+
+// --- WIFI APP ---
+void draw_wifi_app(const char *ssid, const char *user, const char *pass, int focus, int status) {
+    draw_wallpaper();
+    // Caja SSID
+    for (int y = 60; y < 80; y++)
+        for (int x = 90; x < 230; x++)
+            putpixel(x, y, focus == 0 ? 15 : 8);
+    // Caja usuario (opcional)
+    for (int y = 90; y < 110; y++)
+        for (int x = 90; x < 230; x++)
+            putpixel(x, y, focus == 1 ? 15 : 8);
+    // Caja contraseña
+    for (int y = 120; y < 140; y++)
+        for (int x = 90; x < 230; x++)
+            putpixel(x, y, focus == 2 ? 15 : 8);
+    // Botón conectar
+    for (int y = 160; y < 180; y++)
+        for (int x = 120; x < 200; x++)
+            putpixel(x, y, focus == 3 ? 10 : 7); // Verde si enfocado, gris claro si no
+    // Texto
+    cur = 0;
+    print("\n\n        SSID de la red WiFi:");
+    cur = 160;
+    print(ssid);
+    cur = 160 + 60;
+    print("\n        Usuario (802.1X, opcional):");
+    cur = 160 + 120;
+    print(user);
+    cur = 160 + 180;
+    print("\n        Contraseña:");
+    cur = 160 + 240;
+    for (int i = 0; pass[i]; i++) print("*");
+    cur = 160 + 300;
+    print("\n         [ Conectar ]");
+    if (status == 1) {
+        cur = 160 + 360;
+        print("\n  ¡Conectando a WiFi...");
+    } else if (status == 2) {
+        cur = 160 + 360;
+        print("\n  ¡Conexión enviada! (Requiere soporte real en el sistema)");
+    }
+}
+
+void wifi_app() {
+    char ssid[32] = "";
+    char user[32] = "";
+    char pass[32] = "";
+    int focus = 0; // 0: ssid, 1: user, 2: pass, 3: botón
+    int pos[3] = {0, 0, 0};
+    int status = 0;
+    while (1) {
+        clear();
+        draw_wifi_app(ssid, user, pass, focus, status);
+        unsigned char c = get_key();
+        if (c == '\n') {
+            if (focus < 3) focus++;
+            else {
+                status = 1;
+                clear();
+                draw_wifi_app(ssid, user, pass, focus, status);
+                // Aquí se simularía la conexión, o se generaría la config adecuada
+                status = 2;
+            }
+        } else if (c == ' ') {
+            focus = (focus + 1) % 4;
+        } else if (c == 8) { // Backspace
+            if (focus == 0 && pos[0] > 0) ssid[--pos[0]] = 0;
+            if (focus == 1 && pos[1] > 0) user[--pos[1]] = 0;
+            if (focus == 2 && pos[2] > 0) pass[--pos[2]] = 0;
+        } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '@' || c == '.' || c == '-' || c == '_') {
+            if (focus == 0 && pos[0] < 31) { ssid[pos[0]++] = c; ssid[pos[0]] = 0; }
+            if (focus == 1 && pos[1] < 31) { user[pos[1]++] = c; user[pos[1]] = 0; }
+            if (focus == 2 && pos[2] < 31) { pass[pos[2]++] = c; pass[pos[2]] = 0; }
+        }
+        if (status == 2) break;
     }
 }
 

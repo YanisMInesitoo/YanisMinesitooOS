@@ -21,3 +21,20 @@ Así estarán listos para ser incluidos en el initramfs.
 ---
 
 Cuando termines de descargar y preparar los binarios, ejecuta build.sh como siempre para generar la ISO con todas las utilidades.
+
+---
+
+- Para conexión WiFi necesitas:
+  - wpa_supplicant
+  - wpa_passphrase
+  - dhclient (o busybox udhcpc)
+  - iw (opcional, para escanear redes)
+
+Coloca estos binarios en `/dev`, `/sys/dev` o en el PATH según la versión.
+
+---
+
+- Java 21 (OpenJDK 21):
+  - Descarga desde https://jdk.java.net/21/
+  - Copia el binario (y carpeta bin/) en /dev/java o /sys/dev/java
+  - Asegúrate de que el ejecutable 'java' esté en el PATH

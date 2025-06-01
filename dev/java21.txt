@@ -1,0 +1,8 @@
+Coloca aquí el binario de OpenJDK 21 para Linux x86_64.
+
+Puedes descargarlo desde:
+https://jdk.java.net/21/
+
+Descomprime el contenido aquí o en una subcarpeta (por ejemplo, /dev/java o /sys/dev/java).
+
+Asegúrate de que el ejecutable 'java' esté accesible y con permisos de ejecución en el entorno real.
